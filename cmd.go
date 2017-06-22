@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -191,8 +192,15 @@ func (ctx *Context) Setenv(key, value string) error {
 }
 
 // AbsPath returns an absolute representation of path, with relative paths
-// interpreted as relative to ctx.Dir.
+// interpreted as relative to ctx.Dir and with "~/" replaced with users
+// home dir.
 func (ctx *Context) AbsPath(path string) string {
+	if len(path) >= 2 && path[:2] == "~/" {
+		usr, err := user.Current()
+		if err == nil {
+			path = filepath.Join(usr.HomeDir, path[2:])
+		}
+	}
 	if filepath.IsAbs(path) {
 		return path
 	}
